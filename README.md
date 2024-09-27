@@ -1,39 +1,34 @@
-// Function to apply (or remove) XP to selected actors
 async function applyXP(selectedActors, xpAmount) {
     let perPlayerXP = Math.floor(xpAmount / selectedActors.length);
     for (let actor of selectedActors) {
-        let currentXP = actor.system.details.xp.value;  // Updated for v10
+        let currentXP = actor.system.details.experience.total;  // XP in WFRP 4e is stored in the "experience.total"
         let newXP = currentXP + perPlayerXP;
         newXP = Math.max(newXP, 0);  // Prevent XP from going below zero
-        await actor.update({"system.details.xp.value": newXP});  // Updated for v10
+        await actor.update({"system.details.experience.total": newXP});  // Update XP in WFRP 4e
         console.log(`${actor.name} now has ${newXP} XP.`);
     }
     ui.notifications.info(`Applied ${perPlayerXP} XP to ${selectedActors.length} characters.`);
 }
 
-// Save checked player selections
 function saveSelectedOptions(selectedActorIds) {
     localStorage.setItem("lastSelectedPlayers", JSON.stringify(selectedActorIds));
 }
 
-// Load checked player selections
 function loadSelectedOptions() {
     return JSON.parse(localStorage.getItem("lastSelectedPlayers") || "[]");
 }
 
-// Function to update XP values based on input changes or player selection changes
 function updateXPFields(html) {
     let partyXPInput = html.find("#party-xp-input");
     let playerXPInput = html.find("#player-xp-input");
     let selectedPlayers = html.find("input[name=selectedPlayer]:checked").length || 1;
 
-    // When party XP is changed, update player XP
+
     partyXPInput.on('input', function () {
         let partyXP = parseInt(partyXPInput.val()) || 0;
         playerXPInput.val(Math.floor(partyXP / selectedPlayers));
     });
 
-    // When player XP is changed, update party XP
     playerXPInput.on('input', function () {
         let playerXP = parseInt(playerXPInput.val()) || 0;
         partyXPInput.val(playerXP * selectedPlayers);
@@ -47,14 +42,12 @@ function updateXPFields(html) {
     });
 }
 
-// Create a dialog to select players and input XP
 let content = `<p><b>Distribute XP</b></p>
 <p><label for="party-xp-input">Party XP:</label> <input type="number" id="party-xp-input" value="0"></p>
 <p><label for="player-xp-input">Per Player XP:</label> <input type="number" id="player-xp-input" value="0"></p>
 <p>Select the players to distribute XP to:</p>
 <form id="player-form">`;
 
-// Load previously selected players
 let lastSelected = loadSelectedOptions();
 
 game.actors.forEach(actor => {
